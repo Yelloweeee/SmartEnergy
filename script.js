@@ -1,28 +1,19 @@
-/*
- * SECURITY NOTE (hackathon demo only):
- * Exposing an Electricity Maps API key in client-side JavaScript is acceptable
- * for a short-lived stage demo, but it is not safe for a real public deployment.
- * For production, call Electricity Maps from a small server-side proxy.
- */
-
-const ELECTRICITY_MAPS_API_KEY = "YOUR_KEY_HERE";
-const ZONE = "IN-KA";
+const ZONE = "IN-SO";
 const CITY_ZONE_MAP = {
-  Bengaluru: "IN-KA",
-  Mumbai: "IN-MH",
-  Delhi: "IN-DL",
-  Chennai: "IN-TN",
-  Hyderabad: "IN-TG",
-  Kolkata: "IN-WB",
-  Pune: "IN-MH",
-  Ahmedabad: "IN-GJ",
-  Jaipur: "IN-RJ",
-  Lucknow: "IN-UP",
-  Kochi: "IN-KL",
+  Bengaluru: "IN-SO",
+  Mumbai: "IN",
+  Delhi: "IN",
+  Chennai: "IN-SO",
+  Hyderabad: "IN-SO",
+  Kolkata: "IN-NE",
+  Pune: "IN",
+  Ahmedabad: "IN-WE",
+  Jaipur: "IN-WE",
+  Lucknow: "IN-NO",
+  Kochi: "IN-SO",
   Singapore: "SG",
   Tokyo: "JP-TK",
   London: "GB",
-  "New York": "US-NYISO",
   Sydney: "AU-NSW",
   Berlin: "DE",
   Paris: "FR",
@@ -51,16 +42,28 @@ const CITY_COORDS = {
   Dubai: { lat: 25.2048, lon: 55.2708 },
 };
 
-const API_BASE = "https://api.electricitymap.org";
+const API_BASE = "";
 const FETCH_TIMEOUT_MS = 8000;
 const LIVE_REFRESH_MS = 60_000;
 const BASE_TICK_MS = 1200;
 const STORAGE_KEY = "gridPulseState:v1";
 
 const APPLIANCES = [
-  { id: "washer", name: "Washing machine", windowHours: 8, loadKwh: 1.2, slot: 0 },
+  {
+    id: "washer",
+    name: "Washing machine",
+    windowHours: 8,
+    loadKwh: 1.2,
+    slot: 0,
+  },
   { id: "ev", name: "EV charger", windowHours: 12, loadKwh: 9.0, slot: 1 },
-  { id: "dishwasher", name: "Dishwasher", windowHours: 6, loadKwh: 1.5, slot: 2 },
+  {
+    id: "dishwasher",
+    name: "Dishwasher",
+    windowHours: 6,
+    loadKwh: 1.5,
+    slot: 2,
+  },
 ];
 
 const CHART = { left: 48, right: 976, top: 20, bottom: 240 };
@@ -76,7 +79,9 @@ let applianceState = {};
 let persistedTriggered = {};
 let isPlaying = true;
 let speed = 1;
-let reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+let reducedMotion = window.matchMedia(
+  "(prefers-reduced-motion: reduce)",
+).matches;
 let cordPaths = {};
 let currentZone = ZONE;
 let selectedCity = "Bengaluru";
@@ -161,7 +166,7 @@ function saveState() {
       selectedLongitude,
       triggered,
       savedAt: Date.now(),
-    })
+    }),
   );
 }
 
@@ -171,15 +176,22 @@ function hydrateState() {
     hourlyData = saved.hourlyData.map(Number);
     isLive = Boolean(saved.isLive);
   }
-  if (Number.isInteger(saved.clockHour)) clockHour = Math.max(0, Math.min(23, saved.clockHour));
+  if (Number.isInteger(saved.clockHour))
+    clockHour = Math.max(0, Math.min(23, saved.clockHour));
   if (typeof saved.isPlaying === "boolean") isPlaying = saved.isPlaying;
   if (SPEEDS.includes(Number(saved.speed))) speed = Number(saved.speed);
-  if (Number.isFinite(Number(saved.co2Saved))) co2Saved = Number(saved.co2Saved);
-  if (typeof saved.selectedZone === "string" && saved.selectedZone) currentZone = saved.selectedZone;
-  if (typeof saved.selectedCity === "string" && saved.selectedCity) selectedCity = saved.selectedCity;
-  if (Number.isFinite(Number(saved.selectedLatitude))) selectedLatitude = Number(saved.selectedLatitude);
-  if (Number.isFinite(Number(saved.selectedLongitude))) selectedLongitude = Number(saved.selectedLongitude);
-  if (saved.triggered && typeof saved.triggered === "object") persistedTriggered = saved.triggered;
+  if (Number.isFinite(Number(saved.co2Saved)))
+    co2Saved = Number(saved.co2Saved);
+  if (typeof saved.selectedZone === "string" && saved.selectedZone)
+    currentZone = saved.selectedZone;
+  if (typeof saved.selectedCity === "string" && saved.selectedCity)
+    selectedCity = saved.selectedCity;
+  if (Number.isFinite(Number(saved.selectedLatitude)))
+    selectedLatitude = Number(saved.selectedLatitude);
+  if (Number.isFinite(Number(saved.selectedLongitude)))
+    selectedLongitude = Number(saved.selectedLongitude);
+  if (saved.triggered && typeof saved.triggered === "object")
+    persistedTriggered = saved.triggered;
   setZoneDisplay();
 }
 
@@ -197,23 +209,19 @@ function syncControls() {
     button.classList.toggle("active", active);
     button.setAttribute("aria-pressed", String(active));
   }
-  document.documentElement.style.setProperty("--tick-ms", `${currentTickMs()}ms`);
+  document.documentElement.style.setProperty(
+    "--tick-ms",
+    `${currentTickMs()}ms`,
+  );
   setPausedClass();
 }
 
 function fetchWithTimeout(url, options = {}, ms = FETCH_TIMEOUT_MS) {
   const ctrl = new AbortController();
   const id = setTimeout(() => ctrl.abort(), ms);
-  return fetch(url, { ...options, signal: ctrl.signal }).finally(() => clearTimeout(id));
-}
-
-function apiHeaders() {
-  return { "auth-token": ELECTRICITY_MAPS_API_KEY, Accept: "application/json" };
-}
-
-function keyLooksValid() {
-  const key = (ELECTRICITY_MAPS_API_KEY || "").trim();
-  return key.length > 0 && key !== "YOUR_KEY_HERE";
+  return fetch(url, { ...options, signal: ctrl.signal }).finally(() =>
+    clearTimeout(id),
+  );
 }
 
 function normalizeTo24Hours(historyEntries) {
@@ -259,23 +267,25 @@ function generateSimulatedCurve() {
 }
 
 async function fetchHistory(zone = currentZone) {
-  if (!keyLooksValid()) throw new Error("API key placeholder");
-  const url = `${API_BASE}/v3/carbon-intensity/history?zone=${encodeURIComponent(zone)}`;
-  const res = await fetchWithTimeout(url, { headers: apiHeaders() });
+  const url = `/api/grid?type=history&zone=${encodeURIComponent(zone)}`;
+  const res = await fetchWithTimeout(url);
   if (!res.ok) throw new Error(`History HTTP ${res.status}`);
   const json = await res.json();
   const history = json.history || json.data || json;
-  if (!Array.isArray(history) || !history.length) throw new Error("Empty history");
+  if (!Array.isArray(history) || !history.length)
+    throw new Error("Empty history");
   return normalizeTo24Hours(history);
 }
 
 async function fetchLatest(zone = currentZone) {
-  if (!keyLooksValid()) throw new Error("API key placeholder");
-  const url = `${API_BASE}/v3/carbon-intensity/latest?zone=${encodeURIComponent(zone)}`;
-  const res = await fetchWithTimeout(url, { headers: apiHeaders() });
+  const url = `/api/grid?type=latest&zone=${encodeURIComponent(zone)}`;
+  const res = await fetchWithTimeout(url);
   if (!res.ok) throw new Error(`Latest HTTP ${res.status}`);
   const json = await res.json();
-  const ci = json.carbonIntensity ?? json.data?.carbonIntensity ?? json.carbonIntensity?.carbonIntensity;
+  const ci =
+    json.carbonIntensity ??
+    json.data?.carbonIntensity ??
+    json.carbonIntensity?.carbonIntensity;
   if (ci == null) throw new Error("No intensity in latest");
   return Number(ci);
 }
@@ -317,16 +327,27 @@ function curvedPath(from, to, id) {
 function layoutCords() {
   if (!els.hubStage || !els.cordsLayer || !els.socketBoard) return;
   const stageRect = els.hubStage.getBoundingClientRect();
-  els.cordsLayer.setAttribute("viewBox", `0 0 ${stageRect.width} ${stageRect.height}`);
+  els.cordsLayer.setAttribute(
+    "viewBox",
+    `0 0 ${stageRect.width} ${stageRect.height}`,
+  );
   els.cordsLayer.setAttribute("width", stageRect.width);
   els.cordsLayer.setAttribute("height", stageRect.height);
 
   for (const app of APPLIANCES) {
-    const outEl = els.hubStage.querySelector(`[data-anchor="${app.id}"].cord-anchor-out`);
-    const slotEl = els.socketBoard.querySelector(`.slot-anchor[data-anchor="${app.id}"]`);
+    const outEl = els.hubStage.querySelector(
+      `[data-anchor="${app.id}"].cord-anchor-out`,
+    );
+    const slotEl = els.socketBoard.querySelector(
+      `.slot-anchor[data-anchor="${app.id}"]`,
+    );
     if (!outEl || !slotEl) continue;
 
-    const d = curvedPath(relPoint(outEl, stageRect), relPoint(slotEl, stageRect), app.id);
+    const d = curvedPath(
+      relPoint(outEl, stageRect),
+      relPoint(slotEl, stageRect),
+      app.id,
+    );
     cordPaths[app.id] = d;
 
     const pathEl = document.getElementById(`cord-${app.id}`);
@@ -334,14 +355,18 @@ function layoutCords() {
     if (pathEl) pathEl.setAttribute("d", d);
     if (plugEl) {
       plugEl.style.offsetPath = `path('${d}')`;
-      plugEl.style.offsetDistance = plugEl.classList.contains("active") ? "100%" : "88%";
+      plugEl.style.offsetDistance = plugEl.classList.contains("active")
+        ? "100%"
+        : "88%";
     }
   }
 }
 
 function spawnSparkAtSlot(id) {
   if (reducedMotion || !els.hubStage || !els.socketBoard) return;
-  const slotEl = els.socketBoard.querySelector(`.slot-anchor[data-anchor="${id}"]`);
+  const slotEl = els.socketBoard.querySelector(
+    `.slot-anchor[data-anchor="${id}"]`,
+  );
   if (!slotEl) return;
   const stageRect = els.hubStage.getBoundingClientRect();
   const pt = relPoint(slotEl, stageRect);
@@ -380,12 +405,16 @@ function buildSmoothPath(points, closeArea) {
 }
 
 function renderChart(data) {
-  if (!els.linePath || !els.areaPath || !els.chartGrid || !els.axisLabels) return;
+  if (!els.linePath || !els.areaPath || !els.chartGrid || !els.axisLabels)
+    return;
   const minV = Math.min(...data);
   const maxV = Math.max(...data);
   const range = maxV - minV || 1;
   const cleanThreshold = minV + range * 0.3;
-  const points = data.map((v, h) => ({ x: xAtHour(h), y: yAtValue(v, minV, maxV) }));
+  const points = data.map((v, h) => ({
+    x: xAtHour(h),
+    y: yAtValue(v, minV, maxV),
+  }));
 
   els.linePath.setAttribute("d", buildSmoothPath(points, false));
   els.areaPath.setAttribute("d", buildSmoothPath(points, true));
@@ -414,7 +443,10 @@ function renderChart(data) {
     line.setAttribute("y2", y);
     els.chartGrid.appendChild(line);
 
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const label = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "text",
+    );
     label.setAttribute("class", "axis-label");
     label.setAttribute("x", 40);
     label.setAttribute("y", y + 3);
@@ -424,7 +456,10 @@ function renderChart(data) {
   }
 
   for (let h = 0; h < 24; h += 3) {
-    const label = document.createElementNS("http://www.w3.org/2000/svg", "text");
+    const label = document.createElementNS(
+      "http://www.w3.org/2000/svg",
+      "text",
+    );
     label.setAttribute("class", "axis-label");
     label.setAttribute("x", xAtHour(h));
     label.setAttribute("y", CHART.bottom + 18);
@@ -446,12 +481,12 @@ function updateGridEnergyVisual(hour) {
   els.gridEnergyCard.dataset.state = state;
   els.gridEnergyCard.style.setProperty(
     "--wind-speed",
-    carbon < 150 ? "0.65s" : carbon < 350 ? "1.25s" : "2.65s"
+    carbon < 150 ? "0.65s" : carbon < 350 ? "1.25s" : "2.65s",
   );
   els.gridClock.textContent = formatHour(h);
   els.gridEnergyCard.setAttribute(
     "aria-label",
-    `Grid energy mix animation at ${formatHour(h)}, ${Math.round(carbon)} grams CO2 per kilowatt hour`
+    `Grid energy mix animation at ${formatHour(h)}, ${Math.round(carbon)} grams CO2 per kilowatt hour`,
   );
 }
 
@@ -465,7 +500,7 @@ function setClockVisual(hour, instant = false) {
   const y = yAtValue(
     hourlyData[h],
     renderChart._minV ?? Math.min(...hourlyData),
-    renderChart._maxV ?? Math.max(...hourlyData)
+    renderChart._maxV ?? Math.max(...hourlyData),
   );
   const apply = (node, props) => {
     if (instant || reducedMotion) {
@@ -550,7 +585,10 @@ function precomputeSchedule() {
       ...app,
       optimalHour,
       triggered: Boolean(persistedTriggered[app.id]),
-      savings: Math.max(0, (hourlyData[0] - hourlyData[optimalHour]) * app.loadKwh),
+      savings: Math.max(
+        0,
+        (hourlyData[0] - hourlyData[optimalHour]) * app.loadKwh,
+      ),
     };
     setApplianceVisual(app.id, applianceState[app.id].triggered);
   }
@@ -585,7 +623,7 @@ function activateAppliance(id) {
   spawnPulseRing(state.optimalHour);
   showToast(
     `${state.name} started`,
-    `Grid at ${hourlyData[clockHour]} gCO2/kWh - scheduled ${formatHour(state.optimalHour)}`
+    `Grid at ${hourlyData[clockHour]} gCO2/kWh - scheduled ${formatHour(state.optimalHour)}`,
   );
 
   co2Saved += state.savings;
@@ -645,7 +683,9 @@ function setLiveReadout(value, hint) {
   if (els.liveIntensity) {
     els.liveIntensity.textContent = value == null ? "-" : Math.round(value);
     els.liveIntensity.classList.remove("clean", "dirty", "mid");
-    els.liveIntensity.classList.add(value != null ? classifyIntensity(value) : "mid");
+    els.liveIntensity.classList.add(
+      value != null ? classifyIntensity(value) : "mid",
+    );
   }
   if (els.intensityHint && hint) els.intensityHint.textContent = hint;
 }
@@ -658,7 +698,9 @@ function setDataMode(live) {
     els.badge.classList.toggle("simulated", !live);
   }
   if (els.footerSource) {
-    els.footerSource.textContent = live ? `live Electricity Maps - zone ${currentZone}` : "simulated fallback";
+    els.footerSource.textContent = live
+      ? `live Electricity Maps - zone ${currentZone}`
+      : "simulated fallback";
   }
 }
 
@@ -673,7 +715,9 @@ function setChartLoadingState(isLoading) {
 
 function getCityForZone(zone) {
   const code = String(zone || ZONE).toUpperCase();
-  const match = Object.entries(CITY_ZONE_MAP).find(([, value]) => value.toUpperCase() === code);
+  const match = Object.entries(CITY_ZONE_MAP).find(
+    ([, value]) => value.toUpperCase() === code,
+  );
   return match ? match[0] : "Bengaluru";
 }
 
@@ -683,12 +727,16 @@ function resolveZoneFromInput(value) {
   const normalized = trimmed.toLowerCase();
 
   const exactZone = Object.entries(CITY_ZONE_MAP).find(
-    ([city, zone]) => zone.toLowerCase() === normalized || city.toLowerCase() === normalized
+    ([city, zone]) =>
+      zone.toLowerCase() === normalized || city.toLowerCase() === normalized,
   );
   if (exactZone) return exactZone[1];
 
   const partial = Object.entries(CITY_ZONE_MAP).find(
-    ([city, zone]) => city.toLowerCase().includes(normalized) || normalized.includes(city.toLowerCase()) || zone.toLowerCase().includes(normalized)
+    ([city, zone]) =>
+      city.toLowerCase().includes(normalized) ||
+      normalized.includes(city.toLowerCase()) ||
+      zone.toLowerCase().includes(normalized),
   );
   return partial ? partial[1] : ZONE;
 }
@@ -711,7 +759,9 @@ function syncCityPickerValue() {
 function populateCityLookup() {
   if (!els.cityZoneList) return;
   const options = Object.keys(CITY_ZONE_MAP).sort();
-  els.cityZoneList.innerHTML = options.map((city) => `<option value="${city}"></option>`).join("");
+  els.cityZoneList.innerHTML = options
+    .map((city) => `<option value="${city}"></option>`)
+    .join("");
   syncCityPickerValue();
 }
 
@@ -723,7 +773,9 @@ async function refreshLatest(zone = currentZone) {
     if (hourlyData.length) {
       setLiveReadout(
         hourlyData[new Date().getHours()],
-        isLive ? "Latest fetch failed - showing hour-of-day from history" : "Simulated - mirrors demo curve"
+        isLive
+          ? "Latest fetch failed - showing hour-of-day from history"
+          : "Simulated - mirrors demo curve",
       );
     }
   }
@@ -784,7 +836,9 @@ function bindControls() {
     });
   }
   for (const button of els.speedButtons) {
-    button.addEventListener("click", () => setSimulationSpeed(Number(button.dataset.speed)));
+    button.addEventListener("click", () =>
+      setSimulationSpeed(Number(button.dataset.speed)),
+    );
   }
   if (els.soundToggle) {
     els.soundToggle.addEventListener("click", () => {
@@ -807,14 +861,23 @@ async function ensureData(zone = currentZone) {
     currentZone = zone;
     setZoneDisplay();
     setDataMode(true);
-    setLiveReadout(hourlyData[new Date().getHours()], "History loaded - fetching latest...");
+    setLiveReadout(
+      hourlyData[new Date().getHours()],
+      "History loaded - fetching latest...",
+    );
     await refreshLatest(zone);
   } catch (err) {
-    console.warn("[Grid Pulse] Falling back to simulated data:", err.message || err);
+    console.warn(
+      "[Grid Pulse] Falling back to simulated data:",
+      err.message || err,
+    );
     hourlyData = generateSimulatedCurve();
     currentZone = zone || ZONE;
     setDataMode(false);
-    setLiveReadout(hourlyData[new Date().getHours()], "Using simulated 24-hour curve");
+    setLiveReadout(
+      hourlyData[new Date().getHours()],
+      "Using simulated 24-hour curve",
+    );
   } finally {
     renderChart(hourlyData);
     setChartLoadingState(false);
@@ -831,9 +894,12 @@ function updateImpactStats() {
   const phoneEl = document.getElementById("impactPhoneCharges");
   const moneyEl = document.getElementById("impactMoney");
 
-  if (carEl) carEl.textContent = `${Math.max(0, carKm).toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
-  if (phoneEl) phoneEl.textContent = `${Math.max(0, phoneCharges).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
-  if (moneyEl) moneyEl.textContent = `₹${Math.max(0, savingsRupees).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  if (carEl)
+    carEl.textContent = `${Math.max(0, carKm).toLocaleString(undefined, { maximumFractionDigits: 1 })}`;
+  if (phoneEl)
+    phoneEl.textContent = `${Math.max(0, phoneCharges).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
+  if (moneyEl)
+    moneyEl.textContent = `₹${Math.max(0, savingsRupees).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 }
 
 function triggerConnectSound() {
@@ -914,7 +980,8 @@ async function initGridPulse() {
   syncControls();
   setSoundToggleState(false);
 
-  currentZone = typeof currentZone === "string" && currentZone ? currentZone : ZONE;
+  currentZone =
+    typeof currentZone === "string" && currentZone ? currentZone : ZONE;
   setZoneDisplay();
   await ensureData(currentZone);
   renderChart(hourlyData);
@@ -940,9 +1007,11 @@ window.addEventListener("resize", () => {
   resizeTimer = setTimeout(layoutCords, 120);
 });
 
-window.matchMedia("(prefers-reduced-motion: reduce)").addEventListener("change", (e) => {
-  reducedMotion = e.matches;
-});
+window
+  .matchMedia("(prefers-reduced-motion: reduce)")
+  .addEventListener("change", (e) => {
+    reducedMotion = e.matches;
+  });
 
 if (document.fonts && document.fonts.ready) {
   document.fonts.ready.then(() => layoutCords());
@@ -953,7 +1022,14 @@ window.GridPulse = {
   pauseSimulation,
   resumeSimulation,
   setSimulationSpeed,
-  getState: () => ({ hourlyData, isLive, clockHour, isPlaying, speed, co2Saved }),
+  getState: () => ({
+    hourlyData,
+    isLive,
+    clockHour,
+    isPlaying,
+    speed,
+    co2Saved,
+  }),
 };
 
 initGridPulse();
