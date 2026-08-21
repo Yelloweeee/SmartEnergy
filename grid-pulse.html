@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Grid Pulse — Run appliances when the grid is cleanest</title>
+<meta name="description" content="Grid Pulse schedules washing machines, dishwashers and EV chargers to start in the hour with the lowest grid carbon intensity, using live electricity grid data." />
+<meta property="og:title" content="Grid Pulse — Run appliances when the grid is cleanest" />
+<meta property="og:description" content="Appliances that wait for clean power. Grid Pulse uses live carbon intensity data to start your devices in the lowest-carbon hour." />
+<meta property="og:type" content="website" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" />
+<style>
+  :root{
+    --background:oklch(0.16 0.028 264);
+    --foreground:oklch(0.95 0.008 250);
+    --surface:oklch(0.205 0.03 264);
+    --surface-2:oklch(0.245 0.032 264);
+    --clean:oklch(0.82 0.14 185);
+    --clean-dim:oklch(0.62 0.11 187);
+    --dirty:oklch(0.78 0.16 62);
+    --muted-foreground:oklch(0.68 0.02 255);
+    --border:oklch(0.3 0.03 264);
+    --primary-foreground:oklch(0.16 0.028 264);
+    --glow-clean:0 0 0 1px color-mix(in oklab,var(--clean) 45%,transparent),0 0 32px -6px color-mix(in oklab,var(--clean) 55%,transparent);
+    --grid-line:color-mix(in oklab,var(--clean) 8%,transparent);
+    --font-display:"Space Grotesk",ui-sans-serif,system-ui,sans-serif;
+    --font-mono:"JetBrains Mono",ui-monospace,monospace;
+    --font-sans:"Inter",ui-sans-serif,system-ui,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;border-color:var(--border)}
+  body{background:var(--background);color:var(--foreground);font-family:var(--font-sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+  h1,h2,h3{font-family:var(--font-display);letter-spacing:-.02em;line-height:1.1}
+  a{text-decoration:none}
+  .wrap{max-width:64rem;margin:0 auto;padding:0 1.5rem}
+  section{border-bottom:1px solid var(--border)}
+  .label-mono{font-family:var(--font-mono);font-size:.6875rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted-foreground)}
+  .clean{color:var(--clean)}.dirty{color:var(--dirty)}.dim{color:var(--clean-dim)}
+  .muted{color:var(--muted-foreground)}
+  /* hero */
+  .hero{position:relative;overflow:hidden;
+    background-image:linear-gradient(to right,var(--grid-line) 1px,transparent 1px),linear-gradient(to bottom,var(--grid-line) 1px,transparent 1px);
+    background-size:56px 56px}
+  .hero .glow{position:absolute;top:-10rem;left:50%;transform:translateX(-50%);width:32rem;height:32rem;border-radius:9999px;background:color-mix(in oklab,var(--clean) 10%,transparent);filter:blur(120px);pointer-events:none}
+  .hero .inner{position:relative;padding:5rem 0 6rem}
+  .brand{font-family:var(--font-display);font-size:1.125rem;font-weight:700;letter-spacing:-.02em}
+  .row{display:flex;flex-wrap:wrap;align-items:center;gap:1rem}
+  .badge{display:inline-flex;align-items:center;gap:.625rem;border:1px solid color-mix(in oklab,var(--clean) 25%,transparent);background:color-mix(in oklab,var(--clean) 5%,transparent);border-radius:9999px;padding:.375rem .75rem}
+  .dot{position:relative;display:inline-flex;width:.5rem;height:.5rem}
+  .dot i{position:absolute;inset:0;border-radius:9999px;background:var(--clean);animation:ping 1.8s cubic-bezier(0,0,.2,1) infinite}
+  .dot b{position:relative;width:.5rem;height:.5rem;border-radius:9999px;background:var(--clean)}
+  @keyframes ping{0%{transform:scale(1);opacity:.7}70%,100%{transform:scale(3);opacity:0}}
+  h1{margin-top:2.5rem;max-width:48rem;font-size:2.25rem;font-weight:700}
+  .lede{margin-top:1.75rem;max-width:42rem;color:var(--muted-foreground);font-size:1rem}
+  .cta-row{margin-top:2.5rem;display:flex;flex-wrap:wrap;align-items:center;gap:1rem}
+  .btn{display:inline-flex;align-items:center;gap:.5rem;border-radius:.375rem;padding:.75rem 1.5rem;font-family:var(--font-mono);font-size:.875rem;font-weight:500;text-transform:uppercase;letter-spacing:.14em;transition:all .3s;border:1px solid transparent}
+  .btn.solid{background:var(--clean);color:var(--primary-foreground)}
+  .btn.solid:hover{box-shadow:var(--glow-clean);filter:brightness(1.1)}
+  .btn.ghost{border-color:color-mix(in oklab,var(--clean) 40%,transparent);color:var(--clean)}
+  .btn.ghost:hover{box-shadow:var(--glow-clean);background:color-mix(in oklab,var(--clean) 10%,transparent)}
+  .btn span{transition:transform .3s}
+  .btn:hover span{transform:translateX(4px)}
+  /* sections */
+  .seclabel{display:flex;align-items:center;gap:.75rem}
+  .seclabel .bar{height:1px;width:2rem;background:var(--border)}
+  .pad{padding-top:5rem;padding-bottom:5rem}
+  .two{display:grid;gap:2.5rem}
+  h2{margin-top:1.25rem;font-size:1.5rem;font-weight:700}
+  p+p{margin-top:.75rem}
+  .body{margin-top:1rem;color:var(--muted-foreground);font-size:.875rem}
+  .card{border:1px solid var(--border);background:var(--surface);border-radius:.5rem;padding:1.5rem}
+  .between{display:flex;align-items:center;justify-content:space-between}
+  .axis{margin-top:.5rem;display:flex;justify-content:space-between;font-family:var(--font-mono);font-size:11px;color:var(--muted-foreground)}
+  ol.steps{margin-top:3rem;display:grid;gap:1px;background:var(--border);border:1px solid var(--border);border-radius:.5rem;overflow:hidden;list-style:none}
+  ol.steps li{background:var(--surface);padding:1.75rem;transition:background .3s}
+  ol.steps li:hover{background:var(--surface-2)}
+  .stepno{font-family:var(--font-mono);font-size:1.5rem;font-weight:700;color:color-mix(in oklab,var(--clean) 70%,transparent)}
+  ol.steps li:hover .stepno{color:var(--clean)}
+  .steptop{display:flex;align-items:baseline;gap:1rem}
+  .steptop h3{font-size:1.125rem;font-weight:700}
+  .stepbody{margin-top:.75rem;padding-left:3.25rem;font-size:.875rem;color:var(--muted-foreground)}
+  .stats{margin-top:2.5rem;display:grid;gap:2rem}
+  .rule{height:1px;width:2.5rem}
+  .statval{margin-top:1.25rem;font-family:var(--font-mono);font-size:2.25rem;font-weight:700;letter-spacing:-.02em}
+  .statlbl{margin-top:.75rem;max-width:16rem;font-size:.75rem;color:var(--muted-foreground)}
+  .tech{background:color-mix(in oklab,var(--surface) 40%,transparent)}
+  .tech .wrap{display:flex;flex-direction:column;gap:1rem;padding-top:2rem;padding-bottom:2rem}
+  footer .wrap{padding:3.5rem 1.5rem}
+  .footrow{display:flex;flex-direction:column;gap:2rem}
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .7s cubic-bezier(.16,1,.3,1),transform .7s cubic-bezier(.16,1,.3,1)}
+  .reveal[data-visible="true"]{opacity:1;transform:none}
+  @keyframes dash{to{stroke-dashoffset:0}}
+  @media (min-width:640px){
+    h1{font-size:3rem}h2{font-size:1.875rem}.lede{font-size:1.125rem}.body{font-size:1rem}
+    .hero .inner{padding:7rem 0 8rem}
+    ol.steps{grid-template-columns:1fr 1fr}
+    .stats{grid-template-columns:repeat(3,1fr)}
+    .statval{font-size:3rem}
+    .tech .wrap{flex-direction:row;align-items:center;justify-content:space-between}
+    .footrow{flex-direction:row;align-items:flex-end;justify-content:space-between}
+  }
+  @media (min-width:768px){
+    h1{font-size:3.75rem}
+    .two{grid-template-columns:1fr 1fr;align-items:center}
+  }
+  @media (prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="glow" aria-hidden="true"></div>
+    <div class="wrap inner">
+      <div class="row reveal">
+        <span class="brand">Grid<span class="clean">Pulse</span></span>
+        <div class="badge">
+          <span class="dot"><i></i><b></b></span>
+          <span class="label-mono clean">Live grid data</span>
+        </div>
+      </div>
+      <div class="reveal" style="transition-delay:80ms">
+        <h1>Your appliances shouldn&rsquo;t run the moment you press start — <span class="clean">they should wait for clean power.</span></h1>
+      </div>
+      <div class="reveal" style="transition-delay:160ms">
+        <p class="lede">Grid Pulse watches real-time carbon intensity on the electricity grid and switches your washing machine, dishwasher and EV charger on automatically when the energy mix is at its cleanest. Same cycle, same runtime — far fewer emissions, with nothing for you to do.</p>
+      </div>
+      <div class="cta-row reveal" style="transition-delay:240ms">
+        <a class="btn solid" href="/index.html">Launch Demo <span aria-hidden="true">&rarr;</span></a>
+        <span class="label-mono">Live simulation · 3 appliances</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section>
+    <div class="wrap two pad">
+      <div class="reveal">
+        <div class="seclabel"><span class="label-mono dim">01</span><span class="bar"></span><span class="label-mono">The problem</span></div>
+        <h2>Grid carbon intensity moves all day. Your appliances ignore it.</h2>
+        <p class="body">Almost every device in a home runs on demand, regardless of how dirty the grid is at that second. But the mix shifts constantly — cleaner around midday when solar peaks, much dirtier through the evening ramp when gas plants come online.</p>
+        <p class="body">Most people have zero visibility into any of it, so the choice never gets made.</p>
+      </div>
+      <div class="card reveal" style="transition-delay:120ms">
+        <div class="between">
+          <span class="label-mono">gCO₂/kWh · illustrative</span>
+          <span class="label-mono dim">24h</span>
+        </div>
+        <div style="margin-top:1rem">
+          <svg viewBox="0 0 400 100" role="img" aria-label="Illustrative curve showing grid carbon intensity dipping around midday and rising in the evening peak" style="height:7rem;width:100%">
+            <defs>
+              <linearGradient id="gp-curve" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stop-color="var(--dirty)"/>
+                <stop offset="45%" stop-color="var(--clean)"/>
+                <stop offset="100%" stop-color="var(--dirty)"/>
+              </linearGradient>
+            </defs>
+            <path d="M0 62 C 40 58, 70 30, 110 26 C 150 22, 180 46, 220 54 C 250 60, 275 74, 310 78 C 345 82, 370 52, 400 44"
+              fill="none" stroke="url(#gp-curve)" stroke-width="2" stroke-linecap="round"
+              pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" style="animation:dash 2.4s ease-out forwards"/>
+            <circle cx="110" cy="26" r="3.5" fill="var(--clean)"/>
+            <circle cx="310" cy="78" r="3.5" fill="var(--dirty)"/>
+            <text x="86" y="16" font-family="var(--font-mono)" font-size="8" fill="var(--clean)">CLEANEST</text>
+            <text x="286" y="94" font-family="var(--font-mono)" font-size="8" fill="var(--dirty)">DIRTIEST</text>
+          </svg>
+        </div>
+        <div class="axis"><span>00:00</span><span>12:00</span><span>23:00</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <div class="wrap pad">
+      <div class="reveal">
+        <div class="seclabel"><span class="label-mono dim">02</span><span class="bar"></span><span class="label-mono">How it works</span></div>
+        <h2 style="max-width:42rem">Four steps, running quietly in the background.</h2>
+      </div>
+      <ol class="steps">
+        <li class="reveal">
+          <div class="steptop"><span class="stepno">01</span><h3>Read the grid</h3></div>
+          <p class="stepbody">Pulls live carbon intensity data for your region and tracks how clean the electricity mix is, hour by hour.</p>
+        </li>
+        <li class="reveal" style="transition-delay:90ms">
+          <div class="steptop"><span class="stepno">02</span><h3>Find the clean window</h3></div>
+          <p class="stepbody">For each appliance, it scans the allowed time window and picks the single hour with the lowest carbon intensity.</p>
+        </li>
+        <li class="reveal" style="transition-delay:180ms">
+          <div class="steptop"><span class="stepno">03</span><h3>Wait, then connect</h3></div>
+          <p class="stepbody">The appliance stays idle until that hour arrives, then plugs itself in and starts automatically.</p>
+        </li>
+        <li class="reveal" style="transition-delay:270ms">
+          <div class="steptop"><span class="stepno">04</span><h3>Show the impact</h3></div>
+          <p class="stepbody">Calculates the CO2 avoided by waiting, compared against running the moment you pressed start.</p>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- WHY IT MATTERS -->
+  <section>
+    <div class="wrap pad">
+      <div class="reveal">
+        <div class="seclabel"><span class="label-mono dim">03</span><span class="bar"></span><span class="label-mono">Why it matters</span></div>
+      </div>
+      <div class="stats">
+        <div class="reveal">
+          <div class="rule" style="background:var(--clean)" aria-hidden="true"></div>
+          <p class="statval clean">~30%</p>
+          <p class="statlbl">Lower emissions per cycle</p>
+        </div>
+        <div class="reveal" style="transition-delay:110ms">
+          <div class="rule" style="background:var(--clean)" aria-hidden="true"></div>
+          <p class="statval clean">0 min</p>
+          <p class="statlbl">Change in appliance runtime — only timing</p>
+        </div>
+        <div class="reveal" style="transition-delay:220ms">
+          <div class="rule" style="background:var(--dirty)" aria-hidden="true"></div>
+          <p class="statval dirty">3x</p>
+          <p class="statlbl">Swing in grid carbon intensity across one day</p>
+        </div>
+      </div>
+      <div class="reveal" style="transition-delay:330ms">
+        <p style="margin-top:3rem;max-width:36rem;font-family:var(--font-mono);font-size:.75rem;color:var(--muted-foreground)">Illustrative figures for the prototype. </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- TECH -->
+  <section class="tech">
+    <div class="wrap">
+      <div class="reveal" style="display:flex;flex-wrap:wrap;align-items:center;gap:.5rem 1.5rem">
+        <span class="label-mono clean">Powered by live carbon intensity data</span>
+        <span class="label-mono">Source: National Grid Carbon Intensity API</span>
+      </div>
+      <div class="reveal" style="transition-delay:100ms">
+        <span class="label-mono">Built for Code For Change</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="wrap">
+      <div class="footrow">
+        <div>
+          <span class="brand">Grid<span class="clean">Pulse</span></span>
+          <p style="margin-top:.75rem;max-width:24rem;font-size:.75rem;color:var(--muted-foreground)">Built by duaLITy — Ananya and Shreeya. Prototype only; grid data is fetched live, appliance control is simulated.</p>
+        </div>
+        <a class="btn ghost" href="/index.html">Launch Demo <span aria-hidden="true">&rarr;</span></a>
+      </div>
+      <p class="label-mono" style="margin-top:2.5rem">© 2026 Grid Pulse</p>
+    </div>
+  </footer>
+</main>
+<script>
+  const io = new IntersectionObserver((entries) => {
+    for (const e of entries) {
+      if (e.isIntersecting) { e.target.dataset.visible = "true"; io.unobserve(e.target); }
+    }
+  }, { threshold: 0.15, rootMargin: "0px 0px -8% 0px" });
+  document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+</script>
+</body>
+</html>
