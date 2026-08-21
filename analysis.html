@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Outfit:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+  <title>Grid Pulse - Analysis</title>
+</head>
+<body data-page="analysis">
+  <div class="wrap">
+    <header>
+      <div>
+        <div class="brand-row">
+          <span class="live-dot" aria-hidden="true"></span>
+          <h1>Grid Pulse</h1>
+        </div>
+        <p class="tagline">Appliances that wait for clean grid power - not the moment you press start.</p>
+      </div>
+      <span class="zone-label">Zone: <span id="zoneDisplay">IN-KA</span></span>
+    </header>
+    <div class="page-actions analysis-actions" aria-label="Simulation controls">
+      <a class="nav-button" href="index.html">Back to Appliances</a>
+      <button class="control-button play-toggle" type="button" data-play-toggle aria-pressed="true">Pause</button>
+      <div class="speed-control" role="group" aria-label="Simulation speed">
+        <button class="speed-button" type="button" data-speed="0.5">0.5x</button>
+        <button class="speed-button" type="button" data-speed="1">1x</button>
+        <button class="speed-button" type="button" data-speed="2">2x</button>
+        <button class="speed-button" type="button" data-speed="4">4x</button>
+      </div>
+    </div>
+
+    <section class="grid-energy-card" id="gridEnergyCard" data-state="clean" aria-label="Grid energy mix animation">
+      <div class="grid-energy-header">
+        <h2>Grid Energy</h2>
+        <div class="grid-clock" id="gridClock">00:00</div>
+      </div>
+
+      <div class="grid-stage">
+        <svg class="energy-flow" viewBox="0 0 560 340" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M84 60 C 160 98, 260 88, 318 104 S 396 194, 474 116 S 516 34, 534 18" />
+          <path d="M58 232 C 136 128, 232 114, 316 194 S 422 264, 515 205" />
+        </svg>
+
+        <div class="source-grid">
+          <article class="source-tile">
+            <svg viewBox="0 0 180 230" role="img" aria-label="Animated wind turbine">
+              <path class="ground" d="M28 202h132" />
+              <g class="wind-mast">
+                <path d="M86 202L77 96h17l9 106z" fill="#effbf7" />
+                <circle cx="84" cy="93" r="12" fill="#effbf7" />
+                <g class="wind-blades" fill="#effbf7">
+                  <path d="M84 91c-36-37-59-47-73-47 7 24 28 44 67 55z" />
+                  <path d="M86 93c37-32 61-42 75-40-9 23-32 41-70 48z" />
+                  <path d="M84 94c-10 47-9 74 3 91 14-20 16-48 4-87z" />
+                </g>
+              </g>
+              <text class="source-label" x="90" y="224" text-anchor="middle">Wind ramps clean flow</text>
+            </svg>
+          </article>
+
+          <article class="source-tile">
+            <svg viewBox="0 0 180 230" role="img" aria-label="Animated solar energy source">
+              <g class="solar-rays" stroke="var(--grid-sun)" stroke-width="4" stroke-linecap="round">
+                <path d="M90 30v30" />
+                <path d="M54 52l18 24" />
+                <path d="M126 52l-18 24" />
+              </g>
+              <circle class="solar-disc" cx="90" cy="83" r="22" fill="var(--grid-sun)" />
+              <g transform="translate(34 129) skewX(-12)">
+                <rect x="0" y="0" width="112" height="44" rx="5" fill="#173744" stroke="var(--grid-cyan)" />
+                <path d="M28 0v44M56 0v44M84 0v44M0 22h112" stroke="var(--grid-cyan)" opacity="0.5" />
+                <rect class="solar-panel" x="9" y="9" width="17" height="13" fill="#ecd16a" />
+                <rect class="solar-panel" x="68" y="27" width="17" height="12" fill="#ecd16a" style="animation-delay: .35s" />
+              </g>
+              <text class="source-label" x="90" y="224" text-anchor="middle">Solar glow lowers CO2</text>
+            </svg>
+          </article>
+
+          <article class="source-tile">
+            <svg viewBox="0 0 180 230" role="img" aria-label="Animated peaker plant">
+              <g fill="var(--grid-smoke)">
+                <circle class="smoke" cx="95" cy="61" r="13" />
+                <circle class="smoke" cx="130" cy="57" r="19" />
+                <circle class="smoke" cx="130" cy="85" r="17" />
+              </g>
+              <g fill="var(--grid-plant)">
+                <rect x="54" y="134" width="94" height="50" rx="4" />
+                <rect x="75" y="112" width="17" height="72" rx="3" />
+                <rect x="120" y="87" width="22" height="97" rx="3" />
+              </g>
+              <rect class="plant-window" x="60" y="152" width="80" height="10" fill="var(--grid-dirty)" opacity="0.7" />
+              <path class="ground" d="M42 184h132" />
+              <text class="source-label" x="90" y="224" text-anchor="middle">Peaker smoke on dirty grid</text>
+            </svg>
+          </article>
+        </div>
+      </div>
+    </section>
+<!-- ========== BOTTOM ZONE: Data ========== -->
+    <section class="data-zone" aria-label="Grid data">
+      <div class="data-zone-header">
+        <h2 class="data-zone-title">Grid data</h2>
+        <span id="dataBadge" class="data-badge simulated" aria-live="polite">SIMULATED</span>
+      </div>
+
+      <div class="live-panel">
+        <div class="intensity-card">
+          <span class="panel-label">Current carbon intensity</span>
+          <span id="liveIntensity" class="intensity-value mid">-</span>
+          <span class="intensity-unit">gCO2/kWh</span>
+          <span id="intensityHint" class="intensity-hint">Fetching...</span>
+        </div>
+        <div class="savings-card">
+          <span class="panel-label">CO2 saved this cycle</span>
+          <span id="co2Saved" class="savings-value">0</span>
+          <span class="savings-unit">gCO2 avoided vs hour 0</span>
+        </div>
+      </div>
+
+      <div class="chart-section">
+        <div class="chart-header">
+          <h3 class="chart-title">24-hour carbon curve</h3>
+          <div id="clockReadout" class="clock-readout" aria-live="polite">00:00</div>
+        </div>
+        <svg id="carbonChart" viewBox="0 0 1000 280" role="img" aria-label="Carbon intensity over 24 hours">
+          <defs>
+            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#2dd4bf" />
+              <stop offset="45%" stop-color="#2dd4bf" />
+              <stop offset="70%" stop-color="#f59e0b" />
+              <stop offset="100%" stop-color="#f59e0b" />
+            </linearGradient>
+            <linearGradient id="areaGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.5" />
+              <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0" />
+            </linearGradient>
+          </defs>
+          <g id="chartGrid"></g>
+          <rect id="cleanBand" class="clean-band-rect" x="48" y="20" width="928" height="0" />
+          <line id="thresholdLine" class="threshold-line" x1="48" x2="976" y1="0" y2="0" />
+          <path id="areaPath" class="area-fill" d="" />
+          <path id="linePath" class="intensity-line" d="" />
+          <g id="axisLabels"></g>
+          <line id="clockLine" class="clock-line" x1="48" y1="20" x2="48" y2="240" />
+          <circle id="clockMarker" class="clock-marker" cx="48" cy="130" r="6" />
+          <g id="pulseLayer"></g>
+        </svg>
+        <div class="chart-legend">
+          <div class="legend-item"><span class="legend-swatch clean-band"></span> Clean zone (bottom 30%)</div>
+          <div class="legend-item"><span class="legend-swatch curve"></span> Carbon intensity</div>
+          <div class="legend-item"><span class="legend-swatch marker"></span> Compressed clock</div>
+        </div>
+      </div>
+
+      <footer>
+        Carbon intensity data from
+        <a href="https://www.electricitymaps.com/" target="_blank" rel="noopener noreferrer">Electricity Maps</a>
+        (<span id="footerSource">simulated fallback</span>).
+        API key is embedded client-side for this short-lived hackathon demo only - anyone can view-source and take it.
+        For a real deployment, proxy requests through a small backend instead.
+      </footer>
+    </section>
+  </div>
+
+  <div class="toast-stack" id="toastStack" aria-live="polite"></div>
+  <script src="script.js"></script>
+</body>
+</html>
+
+
+
+
