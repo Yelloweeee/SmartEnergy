@@ -904,14 +904,49 @@
       flex-wrap: wrap;
     }
 
+    .hero-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 2.1fr) minmax(220px, 0.75fr);
+      align-items: stretch;
+      gap: 1rem;
+      margin: 0.8rem 0 1.2rem;
+    }
+
+    .location-panel {
+      display: flex;
+      align-items: stretch;
+    }
+
+    .location-widget {
+      width: 100%;
+      padding: 1.2rem 1rem;
+      border: 1px solid rgba(45, 212, 191, 0.24);
+      border-radius: 28px;
+      background: linear-gradient(180deg, rgba(15, 23, 42, 0.94), rgba(12, 18, 24, 0.94));
+      box-shadow: 0 14px 32px rgba(0, 0, 0, 0.26);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 0.85rem;
+    }
+
+    .location-title {
+      font-family: var(--font-display);
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      text-align: center;
+    }
+
     .city-picker {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
       border: 1px solid var(--border);
-      border-radius: 8px;
+      border-radius: 18px;
       background: rgba(15, 23, 42, 0.9);
-      padding: 0.25rem 0.55rem 0.25rem 0.4rem;
+      padding: 0.6rem 0.8rem;
     }
 
     .picker-label {
@@ -923,18 +958,58 @@
     }
 
     .city-picker input {
-      width: 138px;
+      width: 100%;
       background: transparent;
       border: 0;
       outline: none;
       color: var(--text);
       font-family: var(--font-mono);
       font-size: 0.74rem;
-      padding: 0.35rem 0.1rem;
+      padding: 0.1rem 0;
     }
 
     .city-picker input::placeholder {
       color: var(--text-dim);
+    }
+
+    .geo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .geo-field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 0.5rem 0.6rem;
+      background: rgba(15, 23, 42, 0.8);
+      min-width: 0;
+    }
+
+    .geo-field span {
+      font-family: var(--font-mono);
+      font-size: 0.52rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-dim);
+    }
+
+    .geo-field input {
+      width: 100%;
+      background: transparent;
+      border: 0;
+      outline: none;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 0.68rem;
+      padding: 0.05rem 0 0;
+    }
+
+    .analysis-main {
+      min-width: 0;
     }
 
     .chart-loading-state {

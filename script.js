@@ -29,6 +29,28 @@ const CITY_ZONE_MAP = {
   Dubai: "AE-DU",
 };
 
+const CITY_COORDS = {
+  Bengaluru: { lat: 12.9716, lon: 77.5946 },
+  Mumbai: { lat: 19.076, lon: 72.8777 },
+  Delhi: { lat: 28.6139, lon: 77.209 },
+  Chennai: { lat: 13.0827, lon: 80.2707 },
+  Hyderabad: { lat: 17.385, lon: 78.4867 },
+  Kolkata: { lat: 22.5726, lon: 88.3639 },
+  Pune: { lat: 18.5204, lon: 73.8567 },
+  Ahmedabad: { lat: 23.0225, lon: 72.5714 },
+  Jaipur: { lat: 26.9124, lon: 75.7873 },
+  Lucknow: { lat: 26.8467, lon: 80.9462 },
+  Kochi: { lat: 9.9312, lon: 76.2673 },
+  Singapore: { lat: 1.3521, lon: 103.8198 },
+  Tokyo: { lat: 35.6762, lon: 139.6503 },
+  London: { lat: 51.5072, lon: -0.1276 },
+  "New York": { lat: 40.7128, lon: -74.006 },
+  Sydney: { lat: -33.8688, lon: 151.2093 },
+  Berlin: { lat: 52.52, lon: 13.405 },
+  Paris: { lat: 48.8566, lon: 2.3522 },
+  Dubai: { lat: 25.2048, lon: 55.2708 },
+};
+
 const API_BASE = "https://api.electricitymap.org";
 const FETCH_TIMEOUT_MS = 8000;
 const LIVE_REFRESH_MS = 60_000;
@@ -57,6 +79,9 @@ let speed = 1;
 let reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 let cordPaths = {};
 let currentZone = ZONE;
+let selectedCity = "Bengaluru";
+let selectedLatitude = CITY_COORDS[selectedCity].lat;
+let selectedLongitude = CITY_COORDS[selectedCity].lon;
 let soundEnabled = false;
 let audioContext = null;
 
@@ -90,6 +115,8 @@ const els = {
   chartLoadingState: document.getElementById("chartLoadingState"),
   cityInput: document.getElementById("cityInput"),
   cityZoneList: document.getElementById("cityZoneList"),
+  latInput: document.getElementById("latInput"),
+  lonInput: document.getElementById("lonInput"),
 };
 
 function setZoneDisplay() {
@@ -129,6 +156,9 @@ function saveState() {
       speed,
       co2Saved,
       selectedZone: currentZone,
+      selectedCity,
+      selectedLatitude,
+      selectedLongitude,
       triggered,
       savedAt: Date.now(),
     })
@@ -146,6 +176,9 @@ function hydrateState() {
   if (SPEEDS.includes(Number(saved.speed))) speed = Number(saved.speed);
   if (Number.isFinite(Number(saved.co2Saved))) co2Saved = Number(saved.co2Saved);
   if (typeof saved.selectedZone === "string" && saved.selectedZone) currentZone = saved.selectedZone;
+  if (typeof saved.selectedCity === "string" && saved.selectedCity) selectedCity = saved.selectedCity;
+  if (Number.isFinite(Number(saved.selectedLatitude))) selectedLatitude = Number(saved.selectedLatitude);
+  if (Number.isFinite(Number(saved.selectedLongitude))) selectedLongitude = Number(saved.selectedLongitude);
   if (saved.triggered && typeof saved.triggered === "object") persistedTriggered = saved.triggered;
   setZoneDisplay();
 }
@@ -662,11 +695,17 @@ function resolveZoneFromInput(value) {
 
 function syncCityPickerValue() {
   if (!els.cityInput) return;
-  const cityValue = getCityForZone(currentZone);
+  const cityValue = selectedCity || getCityForZone(currentZone);
   if (!els.cityInput.value || els.cityInput.value.toLowerCase() === "") {
     els.cityInput.value = cityValue;
   }
   els.cityInput.value = cityValue;
+  if (CITY_COORDS[cityValue]) {
+    selectedLatitude = Number(CITY_COORDS[cityValue].lat);
+    selectedLongitude = Number(CITY_COORDS[cityValue].lon);
+  }
+  if (els.latInput) els.latInput.value = String(selectedLatitude);
+  if (els.lonInput) els.lonInput.value = String(selectedLongitude);
 }
 
 function populateCityLookup() {
@@ -840,13 +879,32 @@ function bindZonePicker() {
 
   els.cityInput.addEventListener("change", async (event) => {
     const selectedValue = event.target.value;
+    selectedCity = selectedValue || selectedCity;
     const zone = resolveZoneFromInput(selectedValue);
     currentZone = zone;
+    if (CITY_COORDS[selectedCity]) {
+      selectedLatitude = Number(CITY_COORDS[selectedCity].lat);
+      selectedLongitude = Number(CITY_COORDS[selectedCity].lon);
+    }
     setZoneDisplay();
     syncCityPickerValue();
     await ensureData(currentZone);
     saveState();
   });
+
+  if (els.latInput) {
+    els.latInput.addEventListener("change", () => {
+      selectedLatitude = Number(els.latInput.value || selectedLatitude);
+      saveState();
+    });
+  }
+
+  if (els.lonInput) {
+    els.lonInput.addEventListener("change", () => {
+      selectedLongitude = Number(els.lonInput.value || selectedLongitude);
+      saveState();
+    });
+  }
 }
 
 async function initGridPulse() {
