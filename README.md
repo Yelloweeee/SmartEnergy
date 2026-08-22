@@ -1,6 +1,6 @@
 Team Name: duaLITy
 Team Members: Shreeya Ashtaputre and Ananya Kulkarni
-USNs: 2GI24CS149 and 2GI24CS
+USNs: 2GI24CS149 and 2GI24CS028
 Project Name:GridPulse
 # SmartEnergy 
 
@@ -77,7 +77,7 @@ The application combines real-time electricity-grid carbon-intensity data with a
 
 ### Backend
 
-* Netlify Serverless Functions
+* Vercel Serverless Functions
 * JavaScript
 * Electricity Maps API
 
@@ -97,7 +97,7 @@ SmartEnergy/
 ├── style.css               # Application styling and animations
 │
 └── api/
-    └── grid.js             # Netlify serverless API proxy
+    └── grid.js             # Vercel serverless API proxy
 ```
 
 ##  API Key Security
@@ -110,7 +110,7 @@ The frontend requests:
 /api/grid
 ```
 
-The Netlify serverless function then accesses the secret using:
+The Vercel serverless function then accesses the secret using:
 
 ```javascript
 process.env.ELECTRICITY_MAPS_API_KEY
@@ -145,7 +145,7 @@ cd SmartEnergy
 
 ### 2. Configure the API key
 
-For Netlify, add the following environment variable:
+For Vercel, add the following environment variable:
 
 ```text
 ELECTRICITY_MAPS_API_KEY=your_api_key_here
@@ -162,22 +162,22 @@ grid-pulse.html
 
 and do not commit it to GitHub.
 
-### 3. Run with Netlify
+### 3. Run with Vercel
 
-Because the project uses a Netlify serverless function, it should be tested through Netlify's local development environment rather than opening `index.html` directly.
+Because the project uses a Vercel serverless function, it should be tested through Vercel's local development environment rather than opening `index.html` directly.
 
-If Netlify CLI is installed:
+If Vercel CLI is installed:
 
 ```bash
-netlify dev
+Vercel dev
 ```
 
-The application will then be available through the local Netlify development URL.
+The application will then be available through the local Vercel development URL.
 
-##  Deploying to Netlify
+##  Deploying to Vercel
 
 1. Push the project to GitHub.
-2. Log in to Netlify.
+2. Log in to Vercel.
 3. Create a new site from the GitHub repository.
 4. Select the repository containing `SmartEnergy`.
 5. Configure the environment variable:
@@ -188,7 +188,7 @@ ELECTRICITY_MAPS_API_KEY
 
 6. Deploy the site.
 
-After deployment, Netlify will serve the frontend and the `/api/grid` function.
+After deployment, Vercel will serve the frontend and the `/api/grid` function.
 
 ##  Data Flow
 
@@ -203,7 +203,7 @@ SmartEnergy Frontend
   │
   │ /api/grid
   ▼
-Netlify Serverless Function
+Vercel Serverless Function
 (api/grid.js)
   │
   │ API request + secret token
@@ -275,34 +275,19 @@ the application encourages users to consider:
 
 > "When should I use electricity to reduce my environmental impact?"
 
-##  Security Notes
-
-Never commit secrets to GitHub.
-
-Do not add:
-
-```text
-ELECTRICITY_MAPS_API_KEY=actual-secret
-```
-
-to source files.
-
-For production deployments, configure the key through the hosting provider's environment-variable settings.
-
-If the API key has ever been accidentally exposed publicly, revoke or rotate it through the Electricity Maps account.
 
 ##  Current Status
 
-SmartEnergy is a frontend-focused interactive dashboard with a Netlify serverless API layer for securely retrieving Electricity Maps data.
+SmartEnergy is a frontend-focused interactive dashboard with a Vercel serverless API layer for securely retrieving Electricity Maps data.
 
-The project can be deployed as a static frontend with the `api/grid.js` serverless function running through Netlify.
+The project can be deployed as a static frontend with the `api/grid.js` serverless function running through Vercel.
 
-##  License
+## Live Website
 
-Add your preferred license here, for example:
+**GridPulse:** https://smart-energy-pink.vercel.app/
 
-```text
-MIT License
-```
+##  AI Tool Used
 
-or replace this section with the license chosen for the project.
+**Claude (Anthropic)** was used as an AI-assisted development tool during the project.
+
+
